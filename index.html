@@ -10,255 +10,360 @@
 
     <title>Fluid — a living canvas</title>
     <meta name="description" content="Touch it. Watch it breathe.">
-
     <meta property="og:type" content="website">
     <meta property="og:title" content="Fluid — a living canvas">
     <meta property="og:description" content="Touch it. Watch it breathe.">
     <meta property="og:image" content="/assets/og-preview.jpg">
     <meta name="twitter:card" content="summary_large_image">
 
-    <link href="https://fonts.googleapis.com/css2?family=DM+Mono&family=DM+Sans&display=swap" rel="stylesheet">
-    <script type="text/javascript" src="dat.gui.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
 
     <style>
+        /* ── Design Tokens ────────────────────────────────────── */
         :root {
-            --glass-bg: rgba(255, 255, 255, 0.06);
-            --glass-border: rgba(255, 255, 255, 0.15);
-            --glass-blur: blur(20px) saturate(180%);
+            --glass-bg:     rgba(12, 12, 18, 0.72);
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --glass-blur:   blur(24px) saturate(180%);
             --text-primary: rgba(255, 255, 255, 0.92);
-            --text-muted: rgba(255, 255, 255, 0.45);
-            --accent: rgba(255, 255, 255, 0.85);
+            --text-muted:   rgba(255, 255, 255, 0.42);
+            --accent:       #7dd3fc;
+            --accent-dim:   rgba(125, 211, 252, 0.18);
+            --radius-pill:  22px;
+            --radius-panel: 18px;
+            --shadow:       0 8px 40px rgba(0,0,0,0.55);
         }
 
-        * {
+        /* ── Reset ────────────────────────────────────────────── */
+        *, *::before, *::after {
             box-sizing: border-box;
             user-select: none;
             -webkit-user-select: none;
+            margin: 0; padding: 0;
         }
 
         html, body {
             overflow: hidden;
-            background-color: #000;
-            margin: 0;
-            width: 100%;
-            height: 100%;
+            background: #000;
+            width: 100%; height: 100%;
             font-family: 'DM Sans', sans-serif;
             color: var(--text-primary);
         }
 
         canvas {
-            width: 100vw;
-            height: 100vh;
-            display: block;
             position: absolute;
-            top: 0; left: 0;
+            inset: 0;
+            width: 100vw; height: 100vh;
             z-index: 0;
         }
 
-        /* ── Top-right UI cluster ── */
+        /* ── Shared icon button ──────────────────────────────── */
+        .icon-btn {
+            width: 44px; height: 44px;
+            border-radius: var(--radius-pill);
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            font-size: 17px;
+            color: var(--text-primary);
+            transition: background 0.18s, transform 0.15s, border-color 0.18s;
+            outline: none;
+            flex-shrink: 0;
+        }
+        .icon-btn:hover  { background: rgba(255,255,255,0.10); transform: scale(1.07); }
+        .icon-btn.active { background: var(--accent-dim); border-color: rgba(125,211,252,0.45); }
+        .icon-btn:focus-visible { box-shadow: 0 0 0 2px var(--accent); }
+
+        /* ── Top-right cluster ──────────────────────────────── */
         #ui-container {
             position: absolute;
-            top: 20px;
-            right: 20px;
-            z-index: 10;
+            top: 18px; right: 18px;
+            z-index: 20;
             display: flex;
             flex-direction: column;
             align-items: flex-end;
             gap: 8px;
         }
 
-        /* Shared pill-button style */
-        .icon-btn {
-            width: 44px;
-            height: 44px;
-            border-radius: 22px;
-            background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur);
-            -webkit-backdrop-filter: var(--glass-blur);
-            border: 1px solid var(--glass-border);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            font-size: 18px;
-            color: var(--text-primary);
-            transition: background 0.2s, transform 0.15s ease, box-shadow 0.2s;
-            outline: none;
-            flex-shrink: 0;
-        }
-
-        .icon-btn:hover {
-            background: rgba(255,255,255,0.12);
-            transform: scale(1.06);
-        }
-
-        .icon-btn:focus-visible {
-            box-shadow: 0 0 0 2px var(--accent);
-        }
-
-        /* Active state for pause / settings toggle */
-        .icon-btn.active {
-            background: rgba(255,255,255,0.18);
-            border-color: rgba(255,255,255,0.4);
-        }
-
-        /* ── Control Panel ── */
+        /* ── Control Panel ──────────────────────────────────── */
         #control-panel {
+            width: 288px;
             background: var(--glass-bg);
             backdrop-filter: var(--glass-blur);
             -webkit-backdrop-filter: var(--glass-blur);
             border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            border-radius: var(--radius-panel);
+            box-shadow: var(--shadow);
             overflow: hidden;
             transform-origin: top right;
             transform: scaleY(0);
             opacity: 0;
             max-height: 0;
-            transition: transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1),
-                        opacity 220ms ease,
-                        max-height 220ms ease;
+            transition:
+                transform 230ms cubic-bezier(0.34,1.56,0.64,1),
+                opacity   200ms ease,
+                max-height 230ms ease;
             pointer-events: none;
         }
-
         #control-panel.expanded {
             transform: scaleY(1);
             opacity: 1;
-            max-height: 700px;
+            max-height: 780px;
             pointer-events: auto;
         }
 
-        /* Restyle dat.gui */
-        #control-panel .dg.main {
-            background-color: transparent !important;
-            font-family: 'DM Mono', monospace !important;
-            width: 280px !important;
+        /* scrollable inner */
+        #panel-inner {
+            max-height: 75vh;
+            overflow-y: auto;
+            padding: 12px 0 8px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.12) transparent;
         }
-        #control-panel .dg li.gui-stats { display: none; }
-        #control-panel .dg .c input[type=text] {
-            background: rgba(0,0,0,0.2);
+        #panel-inner::-webkit-scrollbar { width: 4px; }
+        #panel-inner::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
+
+        /* ── Section header ─────────────────────────────────── */
+        .section-header {
+            padding: 10px 16px 4px;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.65rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        /* ── Row ────────────────────────────────────────────── */
+        .row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 7px 16px;
+            gap: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .row:last-child { border-bottom: none; }
+        .section-divider {
+            border: none;
+            border-top: 1px solid rgba(255,255,255,0.07);
+            margin: 4px 0;
+        }
+
+        .row-label {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.78rem;
+            color: var(--text-primary);
+            white-space: nowrap;
+            min-width: 100px;
+        }
+
+        /* value readout next to slider */
+        .row-value {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            min-width: 32px;
+            text-align: right;
+        }
+
+        /* ── Range slider ────────────────────────────────────── */
+        input[type=range] {
+            -webkit-appearance: none;
+            appearance: none;
+            flex: 1;
+            height: 4px;
+            border-radius: 2px;
+            background: rgba(255,255,255,0.12);
+            outline: none;
+            cursor: pointer;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px; height: 14px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 6px rgba(125,211,252,0.5);
+            transition: transform 0.12s;
+        }
+        input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
+        input[type=range]::-moz-range-thumb {
+            width: 14px; height: 14px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: none;
+        }
+
+        /* ── Select dropdown ─────────────────────────────────── */
+        select {
+            flex: 1;
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 8px;
             color: var(--text-primary);
             font-family: 'DM Mono', monospace;
+            font-size: 0.78rem;
+            padding: 4px 8px;
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            text-align: right;
         }
-        #control-panel .dg .c .slider { background: rgba(0,0,0,0.3); }
-        #control-panel .dg .c .slider-fg { background: var(--accent); }
-        #control-panel .dg .property-name { color: var(--text-primary); }
-        #control-panel .dg .cr {
-            background: transparent !important;
-            border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+        select option { background: #111; }
+
+        /* ── Toggle switch ───────────────────────────────────── */
+        .toggle-wrap { display: flex; align-items: center; }
+        .toggle {
+            position: relative;
+            width: 38px; height: 22px;
         }
-        #control-panel .dg .cr.boolean,
-        #control-panel .dg .cr.function,
-        #control-panel .dg .cr.number,
-        #control-panel .dg .cr.string { border-left: none; }
-        #control-panel .dg .cr:last-child { border-bottom: none !important; }
+        .toggle input { opacity: 0; width: 0; height: 0; }
+        .toggle-track {
+            position: absolute;
+            inset: 0;
+            border-radius: 11px;
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .toggle-thumb {
+            position: absolute;
+            top: 3px; left: 3px;
+            width: 14px; height: 14px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            transition: transform 0.2s, background 0.2s;
+            pointer-events: none;
+        }
+        .toggle input:checked ~ .toggle-track {
+            background: var(--accent-dim);
+            border-color: rgba(125,211,252,0.4);
+        }
+        .toggle input:checked ~ .toggle-track .toggle-thumb {
+            transform: translateX(16px);
+            background: var(--accent);
+        }
 
-        .dg.ac { display: none !important; }
+        /* ── Color input ─────────────────────────────────────── */
+        input[type=color] {
+            width: 36px; height: 26px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.15);
+            background: transparent;
+            cursor: pointer;
+            padding: 2px;
+        }
 
-        /* ── Bottom-left cluster ── */
+        /* ── Action buttons inside panel ─────────────────────── */
+        .panel-btn {
+            flex: 1;
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.06);
+            color: var(--text-primary);
+            font-family: 'DM Mono', monospace;
+            font-size: 0.78rem;
+            cursor: pointer;
+            transition: background 0.15s;
+            text-align: center;
+        }
+        .panel-btn:hover { background: rgba(255,255,255,0.12); }
+
+        /* ── Bottom-left cluster ─────────────────────────────── */
         #bottom-left {
             position: absolute;
-            bottom: 20px;
-            left: 20px;
-            z-index: 10;
+            bottom: 18px; left: 18px;
+            z-index: 20;
             display: flex;
             flex-direction: column;
             align-items: flex-start;
             gap: 8px;
         }
 
-        /* Info Drawer */
+        /* ── Info drawer ─────────────────────────────────────── */
         #info-drawer {
             position: absolute;
-            bottom: 80px;
-            left: 20px;
-            width: calc(100% - 40px);
-            max-width: 380px;
+            bottom: 78px; left: 18px;
+            width: calc(100% - 36px);
+            max-width: 370px;
             background: var(--glass-bg);
             backdrop-filter: var(--glass-blur);
             -webkit-backdrop-filter: var(--glass-blur);
             border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            border-radius: var(--radius-panel);
+            box-shadow: var(--shadow);
             padding: 20px;
-            z-index: 10;
+            z-index: 20;
             transform: translateY(120%);
             opacity: 0;
-            transition: transform 300ms ease-out, opacity 300ms ease-out;
+            transition: transform 300ms ease-out, opacity 280ms ease-out;
             pointer-events: none;
         }
-        #info-drawer.open {
-            transform: translateY(0);
-            opacity: 1;
-            pointer-events: auto;
-        }
+        #info-drawer.open { transform: translateY(0); opacity: 1; pointer-events: auto; }
         #info-drawer h2 {
-            margin: 0 0 8px 0;
-            font-size: 1.2rem;
             font-family: 'DM Mono', monospace;
+            font-size: 1.05rem;
+            margin-bottom: 8px;
         }
         #info-drawer p {
-            margin: 0 0 16px 0;
-            font-size: 0.95rem;
-            line-height: 1.5;
+            font-size: 0.9rem;
+            line-height: 1.6;
             color: var(--text-primary);
+            margin-bottom: 12px;
         }
         #info-drawer .tech-tag {
-            font-size: 0.8rem;
-            color: var(--text-muted);
             font-family: 'DM Mono', monospace;
-            margin-bottom: 20px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
             display: block;
+            margin-bottom: 16px;
         }
         #info-drawer a {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.85rem;
             color: var(--accent);
             text-decoration: none;
-            border-bottom: 1px solid rgba(255,255,255,0.3);
+            border-bottom: 1px solid rgba(125,211,252,0.3);
             transition: border-color 0.2s;
-            font-family: 'DM Mono', monospace;
-            font-size: 0.9rem;
         }
         #info-drawer a:hover { border-bottom-color: var(--accent); }
 
-        /* ── GitHub link — bottom-right ── */
+        /* ── GitHub link ─────────────────────────────────────── */
         #github-link {
             position: absolute;
-            bottom: 20px;
-            right: 20px;
-            z-index: 10;
-            opacity: 0.6;
-            transition: opacity 0.2s;
+            bottom: 20px; right: 18px;
+            z-index: 20;
+            display: flex; align-items: center; gap: 6px;
             color: var(--text-primary);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 6px;
             font-family: 'DM Mono', monospace;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
+            text-decoration: none;
+            opacity: 0.55;
+            transition: opacity 0.2s;
         }
         #github-link:hover { opacity: 1; }
-        #github-link svg {
-            width: 22px;
-            height: 22px;
-            fill: currentColor;
-        }
+        #github-link svg { width: 20px; height: 20px; fill: currentColor; }
 
-        /* ── Toast ── */
+        /* ── Toast ───────────────────────────────────────────── */
         #toast {
             position: absolute;
-            top: 20px;
-            left: 50%;
+            top: 18px; left: 50%;
             transform: translateX(-50%);
             background: var(--glass-bg);
             backdrop-filter: var(--glass-blur);
             -webkit-backdrop-filter: var(--glass-blur);
             border: 1px solid var(--glass-border);
             border-radius: 20px;
-            padding: 8px 18px;
-            color: var(--text-primary);
+            padding: 7px 18px;
             font-family: 'DM Mono', monospace;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            color: var(--text-primary);
             z-index: 100;
             opacity: 0;
             pointer-events: none;
@@ -267,12 +372,11 @@
         }
         #toast.show { opacity: 1; }
 
-        /* ── Desktop tweaks ── */
+        /* ── Desktop: info drawer slides from bottom-left ─────── */
         @media (min-width: 768px) {
             #info-drawer {
-                bottom: 20px;
-                left: 80px;
-                transform: translateY(20px);
+                bottom: 18px; left: 78px;
+                transform: translateY(16px);
             }
             #info-drawer.open { transform: translateY(0); }
         }
@@ -281,17 +385,168 @@
 <body>
     <canvas aria-label="Interactive fluid simulation. Drag or touch to interact."></canvas>
 
-    <!-- Top-right: Settings toggle + Pause + Screenshot -->
+    <!-- ── Top-right: Settings ⚙ · Pause ▶ · Screenshot 📷 ── -->
     <div id="ui-container">
-        <button id="settings-btn" class="icon-btn" aria-label="Toggle settings" title="Settings">⚙</button>
-        <button id="pause-btn"    class="icon-btn" aria-label="Pause/Resume simulation" title="Pause / Resume">▶</button>
-        <button id="screenshot-btn" class="icon-btn" aria-label="Take screenshot" title="Screenshot">📷</button>
-        <div id="control-panel"></div>
-    </div>
+        <button id="settings-btn" class="icon-btn" title="Settings" aria-label="Toggle settings">⚙</button>
+        <button id="pause-btn"    class="icon-btn" title="Pause"    aria-label="Pause / Resume">▶</button>
+        <button id="screenshot-btn" class="icon-btn" title="Screenshot" aria-label="Take screenshot">📷</button>
 
-    <!-- Bottom-left: About drawer -->
+        <!-- Pure-HTML control panel -->
+        <div id="control-panel" aria-label="Simulation settings">
+            <div id="panel-inner">
+
+                <!-- ── Fluid ── -->
+                <div class="section-header">Fluid</div>
+
+                <div class="row">
+                    <span class="row-label">Quality</span>
+                    <select id="ctl-quality">
+                        <option value="1024">High</option>
+                        <option value="512">Medium</option>
+                        <option value="256">Low</option>
+                        <option value="128">Very Low</option>
+                    </select>
+                </div>
+
+                <div class="row">
+                    <span class="row-label">Sim Res</span>
+                    <select id="ctl-simres">
+                        <option value="32">32</option>
+                        <option value="64">64</option>
+                        <option value="128" selected>128</option>
+                        <option value="256">256</option>
+                    </select>
+                </div>
+
+                <div class="row">
+                    <span class="row-label">Splat Radius</span>
+                    <input type="range" id="ctl-splat" min="0.01" max="1.0" step="0.01" value="0.25">
+                    <span class="row-value" id="val-splat">0.25</span>
+                </div>
+
+                <div class="row">
+                    <button class="panel-btn" id="ctl-random-splats">✦ Random Splats</button>
+                </div>
+
+                <hr class="section-divider">
+
+                <!-- ── Physics ── -->
+                <div class="section-header">Physics</div>
+
+                <div class="row">
+                    <span class="row-label">Density Fade</span>
+                    <input type="range" id="ctl-density" min="0" max="4.0" step="0.01" value="1">
+                    <span class="row-value" id="val-density">1.00</span>
+                </div>
+
+                <div class="row">
+                    <span class="row-label">Velocity Fade</span>
+                    <input type="range" id="ctl-velocity" min="0" max="4.0" step="0.01" value="0.2">
+                    <span class="row-value" id="val-velocity">0.20</span>
+                </div>
+
+                <div class="row">
+                    <span class="row-label">Pressure</span>
+                    <input type="range" id="ctl-pressure" min="0" max="1.0" step="0.01" value="0.8">
+                    <span class="row-value" id="val-pressure">0.80</span>
+                </div>
+
+                <div class="row">
+                    <span class="row-label">Vorticity</span>
+                    <input type="range" id="ctl-curl" min="0" max="50" step="1" value="30">
+                    <span class="row-value" id="val-curl">30</span>
+                </div>
+
+                <hr class="section-divider">
+
+                <!-- ── Visual ── -->
+                <div class="section-header">Visual</div>
+
+                <div class="row">
+                    <span class="row-label">Shading</span>
+                    <label class="toggle toggle-wrap">
+                        <input type="checkbox" id="ctl-shading" checked>
+                        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                    </label>
+                </div>
+
+                <div class="row">
+                    <span class="row-label">Colorful</span>
+                    <label class="toggle toggle-wrap">
+                        <input type="checkbox" id="ctl-colorful" checked>
+                        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                    </label>
+                </div>
+
+                <hr class="section-divider">
+
+                <!-- ── Bloom ── -->
+                <div class="section-header">Bloom</div>
+
+                <div class="row">
+                    <span class="row-label">Enabled</span>
+                    <label class="toggle toggle-wrap">
+                        <input type="checkbox" id="ctl-bloom" checked>
+                        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                    </label>
+                </div>
+
+                <div class="row bloom-sub">
+                    <span class="row-label">Intensity</span>
+                    <input type="range" id="ctl-bloom-intensity" min="0.1" max="2.0" step="0.01" value="0.8">
+                    <span class="row-value" id="val-bloom-intensity">0.80</span>
+                </div>
+
+                <div class="row bloom-sub">
+                    <span class="row-label">Threshold</span>
+                    <input type="range" id="ctl-bloom-threshold" min="0.0" max="1.0" step="0.01" value="0.6">
+                    <span class="row-value" id="val-bloom-threshold">0.60</span>
+                </div>
+
+                <hr class="section-divider">
+
+                <!-- ── Sunrays ── -->
+                <div class="section-header">Sunrays</div>
+
+                <div class="row">
+                    <span class="row-label">Enabled</span>
+                    <label class="toggle toggle-wrap">
+                        <input type="checkbox" id="ctl-sunrays" checked>
+                        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                    </label>
+                </div>
+
+                <div class="row sunrays-sub">
+                    <span class="row-label">Weight</span>
+                    <input type="range" id="ctl-sunrays-weight" min="0.3" max="1.0" step="0.01" value="1.0">
+                    <span class="row-value" id="val-sunrays-weight">1.00</span>
+                </div>
+
+                <hr class="section-divider">
+
+                <!-- ── Capture ── -->
+                <div class="section-header">Capture</div>
+
+                <div class="row">
+                    <span class="row-label">Background</span>
+                    <input type="color" id="ctl-back-color" value="#000000">
+                </div>
+
+                <div class="row">
+                    <span class="row-label">Transparent</span>
+                    <label class="toggle toggle-wrap">
+                        <input type="checkbox" id="ctl-transparent">
+                        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                    </label>
+                </div>
+
+            </div><!-- /panel-inner -->
+        </div><!-- /control-panel -->
+    </div><!-- /ui-container -->
+
+    <!-- ── Bottom-left: Info ⓘ ── -->
     <div id="bottom-left">
-        <button id="info-button" class="icon-btn" aria-label="About this simulation" title="About">ⓘ</button>
+        <button id="info-button" class="icon-btn" title="About" aria-label="About this simulation">ⓘ</button>
     </div>
 
     <div id="info-drawer">
@@ -299,127 +554,241 @@
         <p>Real-time fluid dynamics, simulated on your GPU using the Navier-Stokes equations.</p>
         <span class="tech-tag">Built with WebGL + GLSL · No frameworks</span>
         <p style="margin-bottom:0">Open source. Study it, fork it, break it.</p>
-        <div style="margin-top: 12px;">
-            <a href="https://github.com/captain-america-7/Fluid-Simulation" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+        <div style="margin-top:12px">
+            <a href="https://github.com/captain-america-7/Fluid-Simulation" target="_blank" rel="noopener noreferrer">View on GitHub ↗</a>
         </div>
     </div>
 
-    <!-- Bottom-right: GitHub -->
+    <!-- ── Bottom-right: GitHub ── -->
     <a href="https://github.com/captain-america-7/Fluid-Simulation" id="github-link" target="_blank" rel="noopener noreferrer" aria-label="GitHub Repository">
-        <svg viewBox="0 0 24 24">
-            <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
-        </svg>
+        <svg viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
         GitHub
     </a>
 
     <div id="toast"></div>
 
+    <!-- Physics engine (no dat.gui dependency) -->
     <script src="script.js"></script>
+
     <script>
+    /* ───────────────────────────────────────────────────────────
+       UI Controller — wires every HTML control to config + engine
+    ─────────────────────────────────────────────────────────── */
+    (function () {
+        // Helper: hex "#rrggbb" → {r,g,b} 0-255
+        function hexToRgb(hex) {
+            const r = parseInt(hex.slice(1,3),16);
+            const g = parseInt(hex.slice(3,5),16);
+            const b = parseInt(hex.slice(5,7),16);
+            return { r, g, b };
+        }
+
+        // Wire a range slider: updates config[key], shows value, calls optional callback
+        function wireSlider(id, valId, key, decimals, cb) {
+            const el = document.getElementById(id);
+            const vl = document.getElementById(valId);
+            el.addEventListener('input', () => {
+                const v = parseFloat(el.value);
+                config[key] = v;
+                vl.textContent = v.toFixed(decimals);
+                if (cb) cb();
+                updateUrlHash();
+            });
+        }
+
+        // Wire a select: updates config[key], calls optional callback after
+        function wireSelect(id, key, cb) {
+            const el = document.getElementById(id);
+            el.addEventListener('change', () => {
+                config[key] = Number(el.value);
+                if (cb) cb();
+                updateUrlHash();
+            });
+        }
+
+        // Wire a toggle checkbox
+        function wireToggle(id, key, cb) {
+            const el = document.getElementById(id);
+            el.addEventListener('change', () => {
+                config[key] = el.checked;
+                if (cb) cb();
+                updateUrlHash();
+            });
+        }
+
+        // Sync all inputs from the current config (respects URL hash loaded values)
+        function syncFromConfig() {
+            document.getElementById('ctl-quality').value         = config.DYE_RESOLUTION;
+            document.getElementById('ctl-simres').value          = config.SIM_RESOLUTION;
+
+            document.getElementById('ctl-splat').value           = config.SPLAT_RADIUS;
+            document.getElementById('val-splat').textContent     = config.SPLAT_RADIUS.toFixed(2);
+
+            document.getElementById('ctl-density').value         = config.DENSITY_DISSIPATION;
+            document.getElementById('val-density').textContent   = config.DENSITY_DISSIPATION.toFixed(2);
+
+            document.getElementById('ctl-velocity').value        = config.VELOCITY_DISSIPATION;
+            document.getElementById('val-velocity').textContent  = config.VELOCITY_DISSIPATION.toFixed(2);
+
+            document.getElementById('ctl-pressure').value        = config.PRESSURE;
+            document.getElementById('val-pressure').textContent  = config.PRESSURE.toFixed(2);
+
+            document.getElementById('ctl-curl').value            = config.CURL;
+            document.getElementById('val-curl').textContent      = config.CURL;
+
+            document.getElementById('ctl-shading').checked       = config.SHADING;
+            document.getElementById('ctl-colorful').checked      = config.COLORFUL;
+
+            document.getElementById('ctl-bloom').checked         = config.BLOOM;
+            document.getElementById('ctl-bloom-intensity').value = config.BLOOM_INTENSITY;
+            document.getElementById('val-bloom-intensity').textContent = config.BLOOM_INTENSITY.toFixed(2);
+            document.getElementById('ctl-bloom-threshold').value = config.BLOOM_THRESHOLD;
+            document.getElementById('val-bloom-threshold').textContent = config.BLOOM_THRESHOLD.toFixed(2);
+
+            document.getElementById('ctl-sunrays').checked       = config.SUNRAYS;
+            document.getElementById('ctl-sunrays-weight').value  = config.SUNRAYS_WEIGHT;
+            document.getElementById('val-sunrays-weight').textContent = config.SUNRAYS_WEIGHT.toFixed(2);
+
+            // back color: convert {r,g,b} config to hex
+            const bc = config.BACK_COLOR;
+            const toHex = n => Math.round(n).toString(16).padStart(2,'0');
+            document.getElementById('ctl-back-color').value = '#' + toHex(bc.r) + toHex(bc.g) + toHex(bc.b);
+
+            document.getElementById('ctl-transparent').checked   = config.TRANSPARENT;
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
-            const settingsBtn    = document.getElementById('settings-btn');
-            const controlPanel   = document.getElementById('control-panel');
-            const pauseBtn       = document.getElementById('pause-btn');
-            const screenshotBtn  = document.getElementById('screenshot-btn');
-            const infoButton     = document.getElementById('info-button');
-            const infoDrawer     = document.getElementById('info-drawer');
-            let hideTimeout;
-            let panelOpen = false;
-
-            // ── Mount dat.gui into our glass panel ──────────────────────
-            const mountGui = () => {
-                const ac = document.querySelector('.dg.ac');
-                if (ac) {
-                    const main = ac.querySelector('.main');
-                    if (main) controlPanel.appendChild(main);
-                    ac.remove();
-                }
-            };
-            setTimeout(mountGui, 100);
-
-            // ── Settings toggle (works on ALL screen sizes) ───────────
-            const togglePanel = (e) => {
-                panelOpen = !panelOpen;
-                controlPanel.classList.toggle('expanded', panelOpen);
-                settingsBtn.classList.toggle('active', panelOpen);
-                if (panelOpen) scheduleAutoCollapse();
-                if (e) e.stopPropagation();
-            };
-            settingsBtn.addEventListener('click', togglePanel);
-
-            // Auto-collapse after 4s of inactivity on mobile
-            const scheduleAutoCollapse = () => {
-                if (window.innerWidth >= 768) return;
-                clearTimeout(hideTimeout);
-                hideTimeout = setTimeout(() => {
-                    panelOpen = false;
-                    controlPanel.classList.remove('expanded');
-                    settingsBtn.classList.remove('active');
-                }, 4000);
-            };
-            controlPanel.addEventListener('touchstart', scheduleAutoCollapse, { passive: true });
-            controlPanel.addEventListener('mousemove',  scheduleAutoCollapse, { passive: true });
-            controlPanel.addEventListener('click',      scheduleAutoCollapse, { passive: true });
-
-            // ── Pause / Resume ────────────────────────────────────────
-            pauseBtn.addEventListener('click', (e) => {
-                if (typeof config !== 'undefined') {
-                    config.PAUSED = !config.PAUSED;
-                    pauseBtn.textContent = config.PAUSED ? '⏵' : '▶';
-                    pauseBtn.classList.toggle('active', config.PAUSED);
-                    pauseBtn.title = config.PAUSED ? 'Resume' : 'Pause';
-                    if (typeof updateUrlHash === 'function') updateUrlHash();
-                }
-                e.stopPropagation();
-            });
-
-            // ── Screenshot ────────────────────────────────────────────
-            screenshotBtn.addEventListener('click', (e) => {
-                if (typeof captureScreenshot === 'function') {
-                    captureScreenshot();
-                    window.showToast('Screenshot saved!');
-                }
-                e.stopPropagation();
-            });
-
-            // ── Info Drawer ───────────────────────────────────────────
-            infoButton.addEventListener('click', (e) => {
-                infoDrawer.classList.toggle('open');
-                infoButton.classList.toggle('active', infoDrawer.classList.contains('open'));
-                e.stopPropagation();
-            });
-
-            // ── Click outside to close ────────────────────────────────
-            document.addEventListener('click', (e) => {
-                if (!infoDrawer.contains(e.target) && e.target !== infoButton) {
-                    infoDrawer.classList.remove('open');
-                    infoButton.classList.remove('active');
-                }
-                if (!controlPanel.contains(e.target) && e.target !== settingsBtn) {
-                    panelOpen = false;
-                    controlPanel.classList.remove('expanded');
-                    settingsBtn.classList.remove('active');
-                }
-            });
-
-            // ── Block canvas events on UI elements ───────────────────
-            const trapEvents = (el) => {
-                ['mousedown','touchstart','touchmove','touchend','click'].forEach(evt =>
-                    el.addEventListener(evt, e => e.stopPropagation(), { passive: false })
-                );
-            };
-            [controlPanel, settingsBtn, pauseBtn, screenshotBtn, infoButton, infoDrawer]
-                .forEach(trapEvents);
+            // Wait one tick for script.js to init config + engine
+            setTimeout(() => {
+                syncFromConfig();
+                wireControls();
+            }, 80);
         });
 
-        // Toast helper (used by script.js + screenshot button)
-        window.showToast = function(message) {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.classList.add('show');
-            clearTimeout(toast._timer);
-            toast._timer = setTimeout(() => toast.classList.remove('show'), 2500);
+        function wireControls() {
+            /* ── Fluid ── */
+            wireSelect('ctl-quality', 'DYE_RESOLUTION', initFramebuffers);
+            wireSelect('ctl-simres',  'SIM_RESOLUTION', initFramebuffers);
+            wireSlider('ctl-splat',    'val-splat',    'SPLAT_RADIUS',          2);
+
+            document.getElementById('ctl-random-splats').addEventListener('click', () => {
+                splatStack.push(parseInt(Math.random() * 20) + 5);
+            });
+
+            /* ── Physics ── */
+            wireSlider('ctl-density',  'val-density',  'DENSITY_DISSIPATION',   2);
+            wireSlider('ctl-velocity', 'val-velocity', 'VELOCITY_DISSIPATION',  2);
+            wireSlider('ctl-pressure', 'val-pressure', 'PRESSURE',              2);
+            wireSlider('ctl-curl',     'val-curl',     'CURL',                  0);
+
+            /* ── Visual ── */
+            wireToggle('ctl-shading',  'SHADING',  updateKeywords);
+            wireToggle('ctl-colorful', 'COLORFUL');
+
+            /* ── Bloom ── */
+            wireToggle('ctl-bloom', 'BLOOM', updateKeywords);
+            wireSlider('ctl-bloom-intensity', 'val-bloom-intensity', 'BLOOM_INTENSITY', 2);
+            wireSlider('ctl-bloom-threshold', 'val-bloom-threshold', 'BLOOM_THRESHOLD', 2);
+
+            /* ── Sunrays ── */
+            wireToggle('ctl-sunrays', 'SUNRAYS', updateKeywords);
+            wireSlider('ctl-sunrays-weight', 'val-sunrays-weight', 'SUNRAYS_WEIGHT', 2);
+
+            /* ── Capture ── */
+            document.getElementById('ctl-back-color').addEventListener('input', (e) => {
+                config.BACK_COLOR = hexToRgb(e.target.value);
+                updateUrlHash();
+            });
+            wireToggle('ctl-transparent', 'TRANSPARENT');
+        }
+
+        /* ─── Settings toggle ─────────────────────────────────── */
+        const settingsBtn  = document.getElementById('settings-btn');
+        const controlPanel = document.getElementById('control-panel');
+        let panelOpen = false;
+        let hideTimeout;
+
+        const togglePanel = (e) => {
+            panelOpen = !panelOpen;
+            controlPanel.classList.toggle('expanded', panelOpen);
+            settingsBtn.classList.toggle('active', panelOpen);
+            if (panelOpen && window.innerWidth < 768) scheduleAutoCollapse();
+            if (e) e.stopPropagation();
         };
+        settingsBtn.addEventListener('click', togglePanel);
+
+        const scheduleAutoCollapse = () => {
+            clearTimeout(hideTimeout);
+            hideTimeout = setTimeout(() => {
+                panelOpen = false;
+                controlPanel.classList.remove('expanded');
+                settingsBtn.classList.remove('active');
+            }, 4000);
+        };
+        controlPanel.addEventListener('touchstart', scheduleAutoCollapse, { passive: true });
+        controlPanel.addEventListener('mousemove',  scheduleAutoCollapse, { passive: true });
+
+        /* ─── Pause / Resume ──────────────────────────────────── */
+        const pauseBtn = document.getElementById('pause-btn');
+        pauseBtn.addEventListener('click', (e) => {
+            config.PAUSED = !config.PAUSED;
+            pauseBtn.textContent = config.PAUSED ? '⏵' : '▶';
+            pauseBtn.title = config.PAUSED ? 'Resume' : 'Pause';
+            pauseBtn.classList.toggle('active', config.PAUSED);
+            if (typeof updateUrlHash === 'function') updateUrlHash();
+            e.stopPropagation();
+        });
+
+        /* ─── Screenshot ──────────────────────────────────────── */
+        document.getElementById('screenshot-btn').addEventListener('click', (e) => {
+            if (typeof captureScreenshot === 'function') {
+                captureScreenshot();
+                window.showToast('Screenshot saved!');
+            }
+            e.stopPropagation();
+        });
+
+        /* ─── Info drawer ─────────────────────────────────────── */
+        const infoButton = document.getElementById('info-button');
+        const infoDrawer = document.getElementById('info-drawer');
+        infoButton.addEventListener('click', (e) => {
+            const open = infoDrawer.classList.toggle('open');
+            infoButton.classList.toggle('active', open);
+            e.stopPropagation();
+        });
+
+        /* ─── Click-outside dismissal ─────────────────────────── */
+        document.addEventListener('click', (e) => {
+            if (!infoDrawer.contains(e.target) && e.target !== infoButton) {
+                infoDrawer.classList.remove('open');
+                infoButton.classList.remove('active');
+            }
+            if (!controlPanel.contains(e.target) && e.target !== settingsBtn) {
+                panelOpen = false;
+                controlPanel.classList.remove('expanded');
+                settingsBtn.classList.remove('active');
+            }
+        });
+
+        /* ─── Block canvas events on UI elements ──────────────── */
+        ['#ui-container','#info-button','#info-drawer'].forEach(sel => {
+            const el = document.querySelector(sel);
+            if (!el) return;
+            ['mousedown','touchstart','touchmove','touchend','click'].forEach(evt =>
+                el.addEventListener(evt, e => e.stopPropagation(), { passive: false })
+            );
+        });
+
+    })();
+
+    /* ─── Toast helper (used by screenshot + performance detect) ─ */
+    window.showToast = function(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        clearTimeout(t._t);
+        t._t = setTimeout(() => t.classList.remove('show'), 2500);
+    };
     </script>
 </body>
 </html>
