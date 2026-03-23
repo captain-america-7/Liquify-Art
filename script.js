@@ -181,38 +181,7 @@ function supportRenderTextureFormat (gl, internalFormat, format, type) {
 }
 
 function startGUI () {
-    var gui = new dat.GUI({ width: 300 });
-    gui.add(config, 'DYE_RESOLUTION', { 'high': 1024, 'medium': 512, 'low': 256, 'very low': 128 }).name('quality').onFinishChange(() => { initFramebuffers(); updateUrlHash(); });
-    gui.add(config, 'SIM_RESOLUTION', { '32': 32, '64': 64, '128': 128, '256': 256 }).name('sim resolution').onFinishChange(() => { initFramebuffers(); updateUrlHash(); });
-    gui.add(config, 'DENSITY_DISSIPATION', 0, 4.0).name('density diffusion').onChange(updateUrlHash);
-    gui.add(config, 'VELOCITY_DISSIPATION', 0, 4.0).name('velocity diffusion').onChange(updateUrlHash);
-    gui.add(config, 'PRESSURE', 0.0, 1.0).name('pressure').onChange(updateUrlHash);
-    gui.add(config, 'CURL', 0, 50).name('vorticity').step(1).onChange(updateUrlHash);
-    gui.add(config, 'SPLAT_RADIUS', 0.01, 1.0).name('splat radius').onChange(updateUrlHash);
-    gui.add(config, 'SHADING').name('shading').onFinishChange(() => { updateKeywords(); updateUrlHash(); });
-    gui.add(config, 'COLORFUL').name('colorful').onChange(updateUrlHash);
-    gui.add(config, 'PAUSED').name('paused').listen().onChange(updateUrlHash);
-
-    gui.add({ fun: () => {
-        splatStack.push(parseInt(Math.random() * 20) + 5);
-    } }, 'fun').name('Random splats');
-
-    let bloomFolder = gui.addFolder('Bloom');
-    bloomFolder.add(config, 'BLOOM').name('enabled').onFinishChange(() => { updateKeywords(); updateUrlHash(); });
-    bloomFolder.add(config, 'BLOOM_INTENSITY', 0.1, 2.0).name('intensity').onChange(updateUrlHash);
-    bloomFolder.add(config, 'BLOOM_THRESHOLD', 0.0, 1.0).name('threshold').onChange(updateUrlHash);
-
-    let sunraysFolder = gui.addFolder('Sunrays');
-    sunraysFolder.add(config, 'SUNRAYS').name('enabled').onFinishChange(() => { updateKeywords(); updateUrlHash(); });
-    sunraysFolder.add(config, 'SUNRAYS_WEIGHT', 0.3, 1.0).name('weight').onChange(updateUrlHash);
-
-    let captureFolder = gui.addFolder('Capture');
-    captureFolder.addColor(config, 'BACK_COLOR').name('background color').onChange(updateUrlHash);
-    captureFolder.add(config, 'TRANSPARENT').name('transparent').onChange(updateUrlHash);
-    captureFolder.add({ fun: captureScreenshot }, 'fun').name('take screenshot');
-
-    if (isMobile())
-        gui.close();
+    // Control panel is now pure HTML — see index.html
 }
 
 // URL State Syncing
