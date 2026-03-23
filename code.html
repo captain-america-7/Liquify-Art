@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Fluidic Chrome | Simulation Environment</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800;900&amp;family=Inter:wght@300;400;500;600&amp;family=DM+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "secondary-fixed-dim": "#ababab",
+                        "secondary": "#c6c6c6",
+                        "on-error-container": "#ffdad6",
+                        "surface-container-lowest": "#0e0e0e",
+                        "surface-container": "#1f1f1f",
+                        "primary-fixed-dim": "#454747",
+                        "outline-variant": "#474747",
+                        "on-secondary-container": "#e2e2e2",
+                        "on-error": "#690005",
+                        "tertiary-fixed": "#5e5e5f",
+                        "tertiary-fixed-dim": "#464747",
+                        "secondary-fixed": "#c6c6c6",
+                        "on-tertiary-fixed-variant": "#e3e2e2",
+                        "error": "#ffb4ab",
+                        "surface-bright": "#393939",
+                        "surface-dim": "#131313",
+                        "on-surface": "#e2e2e2",
+                        "on-tertiary": "#1a1c1c",
+                        "inverse-surface": "#e2e2e2",
+                        "on-surface-variant": "#c6c6c6",
+                        "on-secondary": "#1a1c1c",
+                        "on-background": "#e2e2e2",
+                        "secondary-container": "#454747",
+                        "on-tertiary-container": "#000000",
+                        "surface-container-low": "#1b1b1b",
+                        "surface-container-highest": "#353535",
+                        "background": "#131313",
+                        "tertiary-container": "#909191",
+                        "on-primary-fixed-variant": "#e2e2e2",
+                        "surface": "#131313",
+                        "on-tertiary-fixed": "#ffffff",
+                        "on-secondary-fixed-variant": "#3a3c3c",
+                        "on-primary-container": "#000000",
+                        "primary-fixed": "#5d5f5f",
+                        "inverse-primary": "#5d5f5f",
+                        "error-container": "#93000a",
+                        "on-secondary-fixed": "#1a1c1c",
+                        "primary-container": "#d4d4d4",
+                        "surface-variant": "#353535",
+                        "on-primary-fixed": "#ffffff",
+                        "surface-container-high": "#2a2a2a",
+                        "tertiary": "#e3e2e2",
+                        "surface-tint": "#c6c6c7",
+                        "outline": "#919191",
+                        "inverse-on-surface": "#303030",
+                        "primary": "#ffffff",
+                        "on-primary": "#1a1c1c"
+                    },
+                    fontFamily: {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Inter"],
+                        "label": ["DM Mono"],
+                        "mono": ["DM Mono"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "1.5rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-runnable-track {
+            background: #353535;
+            height: 4px;
+            border-radius: 2px;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            margin-top: -6px;
+            background-color: #ffffff;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+        }
+        .fluid-canvas-bg {
+            background: linear-gradient(45deg, #0f172a, #1e1b4b, #312e81, #1e1b4b);
+            background-size: 400% 400%;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body overflow-hidden selection:bg-primary selection:text-on-primary">
+<!-- Simulation Canvas Placeholder -->
+<div class="fixed inset-0 z-0 fluid-canvas-bg" data-alt="Dynamic colorful fluid simulation background with gradients">
+<!-- Overlay Grain/Texture -->
+<div class="absolute inset-0 opacity-20 pointer-events-none mix-blend-overlay bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
+</div>
+<!-- Top Navigation Bar -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-8 py-4 bg-white/5 backdrop-blur-2xl border-b border-white/10 shadow-2xl shadow-black/50">
+<div class="flex items-center gap-4">
+<span class="text-xl font-bold tracking-tighter text-white uppercase font-headline">Fluidic Chrome</span>
+<div class="h-4 w-[1px] bg-white/20"></div>
+<span class="text-[10px] font-mono uppercase tracking-widest text-white/50">V.04.2-LAB</span>
+</div>
+<div class="flex gap-6 items-center">
+<button class="text-white/40 hover:text-white transition-all duration-300 hover:bg-white/10 p-2 rounded-lg group">
+<span class="material-symbols-outlined" data-icon="info">info</span>
+</button>
+</div>
+</header>
+<!-- Sidebar Control Panel (The Instrument Panel) -->
+<aside class="fixed left-0 top-20 z-40 flex flex-col gap-6 p-6 bg-white/5 backdrop-blur-2xl rounded-3xl border border-white/15 m-4 w-72 h-auto shadow-3xl shadow-black/60">
+<div class="flex flex-col gap-1 border-b border-white/10 pb-4">
+<h2 class="font-headline font-black text-white text-lg">Control Panel</h2>
+<p class="text-[11px] font-mono text-white/60 uppercase tracking-tight">Simulation Parameters</p>
+</div>
+<nav class="flex flex-col gap-3">
+<button class="bg-white text-black rounded-lg px-3 py-2 font-mono font-bold flex items-center gap-3 transition-transform active:scale-95">
+<span class="material-symbols-outlined text-sm" data-icon="water_drop">water_drop</span>
+<span class="text-xs uppercase tracking-wider">Density</span>
+</button>
+<button class="text-white/40 hover:text-white font-mono flex items-center gap-3 px-3 py-2 hover:bg-white/5 transition-all rounded-lg group">
+<span class="material-symbols-outlined text-sm opacity-50 group-hover:opacity-100" data-icon="speed">speed</span>
+<span class="text-xs uppercase tracking-wider">Velocity</span>
+</button>
+<button class="text-white/40 hover:text-white font-mono flex items-center gap-3 px-3 py-2 hover:bg-white/5 transition-all rounded-lg group">
+<span class="material-symbols-outlined text-sm opacity-50 group-hover:opacity-100" data-icon="compress">compress</span>
+<span class="text-xs uppercase tracking-wider">Pressure</span>
+</button>
+<button class="text-white/40 hover:text-white font-mono flex items-center gap-3 px-3 py-2 hover:bg-white/5 transition-all rounded-lg group">
+<span class="material-symbols-outlined text-sm opacity-50 group-hover:opacity-100" data-icon="Cyclone">cyclone</span>
+<span class="text-xs uppercase tracking-wider">Vorticity</span>
+</button>
+<button class="text-white/40 hover:text-white font-mono flex items-center gap-3 px-3 py-2 hover:bg-white/5 transition-all rounded-lg group">
+<span class="material-symbols-outlined text-sm opacity-50 group-hover:opacity-100" data-icon="thermostat">thermostat</span>
+<span class="text-xs uppercase tracking-wider">Temperature</span>
+</button>
+</nav>
+<div class="mt-4 pt-4 border-t border-white/10">
+<button class="w-full py-3 bg-transparent border border-white/20 hover:border-white/50 text-white font-mono text-[10px] uppercase tracking-widest transition-all hover:bg-white/5 rounded-xl">
+                Reset Simulation
+            </button>
+</div>
+</aside>
+<!-- Main Configuration Panel (Floating Glass Panel) -->
+<main class="fixed top-24 right-8 z-30 w-80">
+<div class="glass-panel p-6 rounded-xl flex flex-col gap-6 shadow-2xl">
+<!-- Section: Color Configuration -->
+<section class="flex flex-col gap-4">
+<div class="flex justify-between items-center">
+<label class="text-[10px] font-mono text-white/50 uppercase tracking-widest">Color Mode</label>
+<div class="flex bg-surface-container-highest rounded-lg p-1">
+<button class="px-3 py-1 bg-white text-black text-[9px] font-mono font-bold rounded-md uppercase">Rainbow</button>
+<button class="px-3 py-1 text-white/40 text-[9px] font-mono font-bold rounded-md uppercase hover:text-white">Custom</button>
+</div>
+</div>
+<div class="flex justify-between items-center">
+<label class="text-[10px] font-mono text-white/50 uppercase tracking-widest">Custom Color</label>
+<div class="flex items-center gap-3">
+<span class="text-[10px] font-mono text-white/80">#00CFFF</span>
+<div class="w-6 h-6 rounded-full border border-white/20" style="background-color: #00CFFF;"></div>
+</div>
+</div>
+</section>
+<!-- Section: Physics Sliders -->
+<section class="flex flex-col gap-6">
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-center">
+<label class="text-[10px] font-mono text-white/50 uppercase tracking-widest">Viscosity</label>
+<span class="text-[10px] font-mono text-white">0.40</span>
+</div>
+<input class="w-full" max="1" min="0" step="0.01" type="range" value="0.4"/>
+</div>
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-center">
+<label class="text-[10px] font-mono text-white/50 uppercase tracking-widest">Splat Radius</label>
+<span class="text-[10px] font-mono text-white">0.25</span>
+</div>
+<input class="w-full" max="1" min="0" step="0.01" type="range" value="0.25"/>
+</div>
+<div class="flex flex-col gap-2">
+<div class="flex justify-between items-center">
+<label class="text-[10px] font-mono text-white/50 uppercase tracking-widest">Pressure Iterations</label>
+<span class="text-[10px] font-mono text-white">20</span>
+</div>
+<input class="w-full" max="50" min="1" step="1" type="range" value="20"/>
+</div>
+</section>
+<!-- Section: Post Processing Toggles -->
+<section class="flex flex-col gap-3 pt-2 border-t border-white/5">
+<div class="flex justify-between items-center py-1">
+<label class="text-[10px] font-mono text-white/50 uppercase tracking-widest">Bloom</label>
+<button class="w-10 h-5 bg-white rounded-full flex items-center px-1 transition-all">
+<div class="w-3 h-3 bg-black rounded-full ml-auto"></div>
+</button>
+</div>
+<div class="flex justify-between items-center py-1">
+<label class="text-[10px] font-mono text-white/50 uppercase tracking-widest">Sunrays</label>
+<button class="w-10 h-5 bg-white rounded-full flex items-center px-1 transition-all">
+<div class="w-3 h-3 bg-black rounded-full ml-auto"></div>
+</button>
+</div>
+</section>
+<button class="mt-2 w-full py-4 bg-white hover:bg-white/90 text-black font-mono font-bold text-xs uppercase tracking-tighter transition-all flex items-center justify-center gap-2 rounded-xl active:scale-[0.98]">
+<span class="material-symbols-outlined text-sm" data-icon="refresh">refresh</span>
+                Apply Global Reset
+            </button>
+</div>
+</main>
+<!-- Bottom Left: Info/About Toggle -->
+<div class="fixed bottom-10 left-10 z-50">
+<button class="w-12 h-12 glass-panel rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all hover:scale-110 active:scale-95 group">
+<span class="material-symbols-outlined" data-icon="info">info</span>
+<div class="absolute left-16 bg-white/10 backdrop-blur-xl border border-white/10 px-4 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+<span class="text-[10px] font-mono text-white uppercase tracking-widest">About Project</span>
+</div>
+</button>
+</div>
+<!-- Bottom Right: Technical Stats & Social -->
+<div class="fixed bottom-10 right-10 z-50 flex flex-col items-end gap-4 pointer-events-none *:pointer-events-auto">
+<!-- Floating Stat Chips -->
+<div class="flex gap-2">
+<div class="glass-panel px-3 py-1.5 rounded-lg flex items-center gap-2">
+<span class="text-[9px] font-mono text-white/40 uppercase tracking-widest">FPS</span>
+<span class="text-[10px] font-mono text-white font-bold">144.02</span>
+</div>
+<div class="glass-panel px-3 py-1.5 rounded-lg flex items-center gap-2">
+<span class="text-[9px] font-mono text-white/40 uppercase tracking-widest">Res</span>
+<span class="text-[10px] font-mono text-white font-bold">3840×2160</span>
+</div>
+</div>
+<a class="flex items-center gap-3 glass-panel px-4 py-2 rounded-xl group transition-all hover:bg-white/10 px-3 py-1.5 gap-2" href="#">
+<img alt="GitHub Stars" class="w-6 h-auto" data-alt="Github shields.io star badge white theme" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDEtRSjJYkVmZNejIEK3UztGxVQ0MCRBPOjDg_ij-mII-m7iCQt1iQVJOz0FAwXQQeNSw8OQu_7HgCsga_iMZ15YNlHcR0w8NYiVJSS-0xCoZYW1t2nu0RljEL8qJufjROYFqBTVXYbHHYq525D9c3iP_j_9qMvqCuhIy4fWxLqoymmS9lGbUSqVbfaSdgKGbKm1shn7Sl1vpjhVGCu14Ys2oRBX5XUt_kAmfX8wIePXr6INTcAA2aAns7PayfAJM1WMwUqCAC-JJY"/>
+<span class="text-[10px] font-mono text-white/60 uppercase tracking-widest group-hover:text-white transition-colors">GitHub Repository</span>
+</a>
+</div>
+<!-- Universal Footer Navigation -->
+<footer class="fixed bottom-0 w-full z-50 flex justify-between items-center px-8 py-6 pointer-events-none *:pointer-events-auto">
+<div class="font-mono text-[9px] uppercase tracking-widest text-white/30">
+            © 2024 Observational Monolith Project
+        </div>
+<div class="flex gap-6">
+<a class="font-mono text-[9px] uppercase tracking-widest text-white/30 hover:text-white transition-colors transition-all duration-300" href="#">
+                Data Sovereignty
+            </a>
+<a class="font-mono text-[9px] uppercase tracking-widest text-white/30 hover:text-white transition-colors transition-all duration-300" href="#">
+                System Status: NOMINAL
+            </a>
+</div>
+</footer>
+<!-- Experimental Grid Overlay (Technical Feel) -->
+<div class="fixed inset-0 pointer-events-none z-10 opacity-5">
+<div class="h-full w-full bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+</div>
+</body></html>
