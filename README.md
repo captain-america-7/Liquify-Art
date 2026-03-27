@@ -30,8 +30,8 @@ Then open `http://localhost:8000` (or the equivalent local URL).
 ## Architecture
 
 - `index.html`: Entry point, canvas element + floating UI chrome.
-- `script.js`: Physics engine + WebGL core (~1650 lines). Follows a functional setup and uses heavily optimised GLSL kernels.
-- `dat.gui.min.js`: Handles control inputs, styled to match the glassmorphic aesthetic.
+- `script.js`: Physics engine + WebGL core. Follows a functional setup and uses heavily optimised GLSL kernels.
+- Pure HTML/CSS UI: Control inputs styled to match the custom glassmorphic aesthetic (no external UI libraries required).
 - `LDR_LLL1_0.png`: Dithering noise texture to eliminate color banding.
 
 ## Features
