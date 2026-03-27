@@ -203,7 +203,7 @@ function updateUrlHash() {
         SUNRAYS: config.SUNRAYS,
         SUNRAYS_WEIGHT: config.SUNRAYS_WEIGHT,
         TRANSPARENT: config.TRANSPARENT,
-        BACK_COLOR: config.BACK_COLOR
+        BACK_COLOR: JSON.stringify(config.BACK_COLOR)
     };
     const hash = new URLSearchParams(state).toString();
     window.history.replaceState(null, '', '#' + hash);
