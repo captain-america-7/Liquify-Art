@@ -414,16 +414,6 @@
                 <div class="section-header">Fluid</div>
 
                 <div class="row">
-                    <span class="row-label">Quality</span>
-                    <select id="ctl-quality">
-                        <option value="1024">High</option>
-                        <option value="512">Medium</option>
-                        <option value="256">Low</option>
-                        <option value="128">Very Low</option>
-                    </select>
-                </div>
-
-                <div class="row">
                     <span class="row-label">Sim Res</span>
                     <select id="ctl-simres">
                         <option value="32">32</option>
@@ -490,8 +480,8 @@
                 </div>
                 <div class="row">
                     <span class="row-label">Restore Spd</span>
-                    <input type="range" id="ctl-restore-speed" min="0.0" max="2.0" step="0.01" value="0.3">
-                    <span class="row-value" id="val-restore-speed">0.30</span>
+                    <input type="range" id="ctl-restore-speed" min="0.0" max="4.0" step="0.01" value="0.8">
+                    <span class="row-value" id="val-restore-speed">0.80</span>
                 </div>
 
                 <div class="row">
@@ -676,7 +666,6 @@
 
         // Sync all inputs from the current config (respects URL hash loaded values)
         function syncFromConfig() {
-            document.getElementById('ctl-quality').value         = config.DYE_RESOLUTION;
             document.getElementById('ctl-simres').value          = config.SIM_RESOLUTION;
 
             document.getElementById('ctl-splat').value           = config.SPLAT_RADIUS;
@@ -735,7 +724,6 @@
 
         function wireControls() {
             /* ── Fluid ── */
-            wireSelect('ctl-quality', 'DYE_RESOLUTION', initFramebuffers);
             wireSelect('ctl-simres',  'SIM_RESOLUTION', initFramebuffers);
             wireSlider('ctl-splat',    'val-splat',    'SPLAT_RADIUS',          2);
 

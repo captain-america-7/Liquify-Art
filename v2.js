@@ -58,7 +58,7 @@ let config = {
     SUNRAYS_RESOLUTION: 196,
     SUNRAYS_WEIGHT: 1.0,
     IMAGE_RESTORE: true,
-    RESTORE_SPEED: 0.3,
+    RESTORE_SPEED: 0.8,
     THERMAL_CONVECTION: true,
     BUOYANCY_FORCE: 1500.0,
     STATIC_OBSTACLE: true
@@ -615,6 +615,7 @@ const imageSplatShader = compileShader(gl.FRAGMENT_SHADER, `
     void main () {
         vec3 base = texture2D(uTarget, vUv).xyz;
         vec3 imageColor = texture2D(uImage, vec2(vUv.x, 1.0 - vUv.y)).rgb;
+        imageColor *= 1.8; // Boost contrast and brightness heavily
         gl_FragColor = vec4(mix(base, imageColor, blendFactor), 1.0);
     }
 `);
