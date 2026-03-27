@@ -466,6 +466,45 @@
 
                 <hr class="section-divider">
 
+                <!-- ── V2 Advanced ── -->
+                <div class="section-header">V2 Advanced</div>
+
+                <div class="row">
+                    <span class="row-label">Img Dissolve</span>
+                    <label class="toggle toggle-wrap">
+                        <input type="checkbox" id="ctl-image-restore" checked>
+                        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                    </label>
+                </div>
+                <div class="row">
+                    <span class="row-label">Restore Spd</span>
+                    <input type="range" id="ctl-restore-speed" min="0.0" max="2.0" step="0.01" value="0.3">
+                    <span class="row-value" id="val-restore-speed">0.30</span>
+                </div>
+
+                <div class="row">
+                    <span class="row-label">Thermal Conv</span>
+                    <label class="toggle toggle-wrap">
+                        <input type="checkbox" id="ctl-thermal" checked>
+                        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                    </label>
+                </div>
+                <div class="row">
+                    <span class="row-label">Buoyancy</span>
+                    <input type="range" id="ctl-buoyancy" min="0.0" max="3000.0" step="10" value="1500">
+                    <span class="row-value" id="val-buoyancy">1500</span>
+                </div>
+
+                <div class="row">
+                    <span class="row-label">SDF Obstacle</span>
+                    <label class="toggle toggle-wrap">
+                        <input type="checkbox" id="ctl-obstacle" checked>
+                        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                    </label>
+                </div>
+
+                <hr class="section-divider">
+
                 <!-- ── Visual ── -->
                 <div class="section-header">Visual</div>
 
@@ -643,6 +682,16 @@
             document.getElementById('ctl-curl').value            = config.CURL;
             document.getElementById('val-curl').textContent      = config.CURL;
 
+            document.getElementById('ctl-image-restore').checked = config.IMAGE_RESTORE;
+            document.getElementById('ctl-restore-speed').value = config.RESTORE_SPEED;
+            document.getElementById('val-restore-speed').textContent = config.RESTORE_SPEED.toFixed(2);
+
+            document.getElementById('ctl-thermal').checked = config.THERMAL_CONVECTION;
+            document.getElementById('ctl-buoyancy').value = config.BUOYANCY_FORCE;
+            document.getElementById('val-buoyancy').textContent = config.BUOYANCY_FORCE;
+
+            document.getElementById('ctl-obstacle').checked = config.STATIC_OBSTACLE;
+
             document.getElementById('ctl-shading').checked       = config.SHADING;
             document.getElementById('ctl-colorful').checked      = config.COLORFUL;
 
@@ -687,6 +736,13 @@
             wireSlider('ctl-velocity', 'val-velocity', 'VELOCITY_DISSIPATION',  2);
             wireSlider('ctl-pressure', 'val-pressure', 'PRESSURE',              2);
             wireSlider('ctl-curl',     'val-curl',     'CURL',                  0);
+
+            /* ── V2 Advanced ── */
+            wireToggle('ctl-image-restore', 'IMAGE_RESTORE');
+            wireSlider('ctl-restore-speed', 'val-restore-speed', 'RESTORE_SPEED', 2);
+            wireToggle('ctl-thermal', 'THERMAL_CONVECTION');
+            wireSlider('ctl-buoyancy', 'val-buoyancy', 'BUOYANCY_FORCE', 0);
+            wireToggle('ctl-obstacle', 'STATIC_OBSTACLE');
 
             /* ── Visual ── */
             wireToggle('ctl-shading',  'SHADING',  updateKeywords);

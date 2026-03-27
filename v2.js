@@ -57,6 +57,11 @@ let config = {
     SUNRAYS: true,
     SUNRAYS_RESOLUTION: 196,
     SUNRAYS_WEIGHT: 1.0,
+    IMAGE_RESTORE: true,
+    RESTORE_SPEED: 0.3,
+    THERMAL_CONVECTION: true,
+    BUOYANCY_FORCE: 1500.0,
+    STATIC_OBSTACLE: true
 }
 
 function pointerPrototype () {
@@ -202,6 +207,11 @@ function updateUrlHash() {
         BLOOM_THRESHOLD: config.BLOOM_THRESHOLD,
         SUNRAYS: config.SUNRAYS,
         SUNRAYS_WEIGHT: config.SUNRAYS_WEIGHT,
+        IMAGE_RESTORE: config.IMAGE_RESTORE,
+        RESTORE_SPEED: config.RESTORE_SPEED,
+        THERMAL_CONVECTION: config.THERMAL_CONVECTION,
+        BUOYANCY_FORCE: config.BUOYANCY_FORCE,
+        STATIC_OBSTACLE: config.STATIC_OBSTACLE,
         TRANSPARENT: config.TRANSPARENT,
         BACK_COLOR: JSON.stringify(config.BACK_COLOR)
     };
@@ -1258,26 +1268,30 @@ function applyInputs () {
 function step (dt) {
     gl.disable(gl.BLEND);
 
-    imageSplatProgram.bind();
-    gl.uniform1i(imageSplatProgram.uniforms.uTarget, dye.read.attach(0));
-    gl.uniform1i(imageSplatProgram.uniforms.uImage, dissolveImageTexture.attach(1));
-    gl.uniform1f(imageSplatProgram.uniforms.blendFactor, 0.3 * dt); // Restorative force
-    blit(dye.write);
-    dye.swap();
+    if (config.IMAGE_RESTORE) {
+        imageSplatProgram.bind();
+        gl.uniform1i(imageSplatProgram.uniforms.uTarget, dye.read.attach(0));
+        gl.uniform1i(imageSplatProgram.uniforms.uImage, dissolveImageTexture.attach(1));
+        gl.uniform1f(imageSplatProgram.uniforms.blendFactor, config.RESTORE_SPEED * dt);
+        blit(dye.write);
+        dye.swap();
+    }
 
     curlProgram.bind();
     gl.uniform2f(curlProgram.uniforms.texelSize, velocity.texelSizeX, velocity.texelSizeY);
     gl.uniform1i(curlProgram.uniforms.uVelocity, velocity.read.attach(0));
     blit(curl);
 
-    buoyancyProgram.bind();
-    gl.uniform1i(buoyancyProgram.uniforms.uVelocity, velocity.read.attach(0));
-    gl.uniform1i(buoyancyProgram.uniforms.uTemperature, temperature.read.attach(1));
-    gl.uniform1f(buoyancyProgram.uniforms.ambientTemperature, 0.0);
-    gl.uniform1f(buoyancyProgram.uniforms.sigma, 1500.0); // Temperature buoyancy scalar
-    gl.uniform1f(buoyancyProgram.uniforms.dt, dt);
-    blit(velocity.write);
-    velocity.swap();
+    if (config.THERMAL_CONVECTION) {
+        buoyancyProgram.bind();
+        gl.uniform1i(buoyancyProgram.uniforms.uVelocity, velocity.read.attach(0));
+        gl.uniform1i(buoyancyProgram.uniforms.uTemperature, temperature.read.attach(1));
+        gl.uniform1f(buoyancyProgram.uniforms.ambientTemperature, 0.0);
+        gl.uniform1f(buoyancyProgram.uniforms.sigma, config.BUOYANCY_FORCE); 
+        gl.uniform1f(buoyancyProgram.uniforms.dt, dt);
+        blit(velocity.write);
+        velocity.swap();
+    }
 
     vorticityProgram.bind();
     gl.uniform2f(vorticityProgram.uniforms.texelSize, velocity.texelSizeX, velocity.texelSizeY);
@@ -1288,11 +1302,13 @@ function step (dt) {
     blit(velocity.write);
     velocity.swap();
 
-    boundaryProgram.bind();
-    gl.uniform1i(boundaryProgram.uniforms.uVelocity, velocity.read.attach(0));
-    gl.uniform1f(boundaryProgram.uniforms.aspectRatio, canvas.width / canvas.height);
-    blit(velocity.write);
-    velocity.swap();
+    if (config.STATIC_OBSTACLE) {
+        boundaryProgram.bind();
+        gl.uniform1i(boundaryProgram.uniforms.uVelocity, velocity.read.attach(0));
+        gl.uniform1f(boundaryProgram.uniforms.aspectRatio, canvas.width / canvas.height);
+        blit(velocity.write);
+        velocity.swap();
+    }
 
     divergenceProgram.bind();
     gl.uniform2f(divergenceProgram.uniforms.texelSize, velocity.texelSizeX, velocity.texelSizeY);
@@ -1321,11 +1337,13 @@ function step (dt) {
     blit(velocity.write);
     velocity.swap();
 
-    boundaryProgram.bind();
-    gl.uniform1i(boundaryProgram.uniforms.uVelocity, velocity.read.attach(0));
-    gl.uniform1f(boundaryProgram.uniforms.aspectRatio, canvas.width / canvas.height);
-    blit(velocity.write);
-    velocity.swap();
+    if (config.STATIC_OBSTACLE) {
+        boundaryProgram.bind();
+        gl.uniform1i(boundaryProgram.uniforms.uVelocity, velocity.read.attach(0));
+        gl.uniform1f(boundaryProgram.uniforms.aspectRatio, canvas.width / canvas.height);
+        blit(velocity.write);
+        velocity.swap();
+    }
 
     advectionProgram.bind();
     gl.uniform2f(advectionProgram.uniforms.texelSize, velocity.texelSizeX, velocity.texelSizeY);
@@ -1347,11 +1365,13 @@ function step (dt) {
     blit(dye.write);
     dye.swap();
 
-    gl.uniform1i(advectionProgram.uniforms.uVelocity, velocity.read.attach(0));
-    gl.uniform1i(advectionProgram.uniforms.uSource, temperature.read.attach(1));
-    gl.uniform1f(advectionProgram.uniforms.dissipation, config.DENSITY_DISSIPATION * 2.5); // Cool down faster
-    blit(temperature.write);
-    temperature.swap();
+    if (config.THERMAL_CONVECTION) {
+        gl.uniform1i(advectionProgram.uniforms.uVelocity, velocity.read.attach(0));
+        gl.uniform1i(advectionProgram.uniforms.uSource, temperature.read.attach(1));
+        gl.uniform1f(advectionProgram.uniforms.dissipation, config.DENSITY_DISSIPATION * 2.5); // Cool down faster
+        blit(temperature.write);
+        temperature.swap();
+    }
 }
 
 function render (target) {
@@ -1514,10 +1534,12 @@ function splat (x, y, dx, dy, color) {
     blit(dye.write);
     dye.swap();
 
-    gl.uniform1i(splatProgram.uniforms.uTarget, temperature.read.attach(0));
-    gl.uniform3f(splatProgram.uniforms.color, 5.0, 0.0, 0.0); // Inject intense heat
-    blit(temperature.write);
-    temperature.swap();
+    if (config.THERMAL_CONVECTION) {
+        gl.uniform1i(splatProgram.uniforms.uTarget, temperature.read.attach(0));
+        gl.uniform3f(splatProgram.uniforms.color, 5.0, 0.0, 0.0); // Inject intense heat
+        blit(temperature.write);
+        temperature.swap();
+    }
 }
 
 function correctRadius (radius) {
